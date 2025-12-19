@@ -276,6 +276,20 @@ function toggleHomeContent() {
     }
 }
 
+// Function to toggle section content
+function toggleSectionContent(sectionId) {
+    const expandableContent = document.querySelector(`#${sectionId} .expandable-content`);
+    const readMoreBtn = document.querySelector(`#${sectionId} .read-more-btn`);
+
+    if (expandableContent.style.display === 'none' || expandableContent.style.display === '') {
+        expandableContent.style.display = 'block';
+        readMoreBtn.textContent = 'READ LESS';
+    } else {
+        expandableContent.style.display = 'none';
+        readMoreBtn.textContent = 'READ MORE';
+    }
+}
+
 // Scroll to Top Function
 function scrollToTop() {
     window.scrollTo({
