@@ -4,9 +4,10 @@ body {
     padding: 0;
     line-height: 1.7;
     color: #2c3e50;
-    background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+    background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
     background-attachment: fixed;
     scroll-behavior: smooth;
+    animation: medicalPulse 4s ease-in-out infinite;
 }
 
 @keyframes backgroundChange {
@@ -17,12 +18,57 @@ body {
     100% { background-image: url('https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'); }
 }
 
+@keyframes medicalPulse {
+    0%, 100% {
+        background: linear-gradient(135deg, #87CEEB 0%, #B0E0E6 100%);
+    }
+    50% {
+        background: linear-gradient(135deg, #A0D6FF 0%, #C0E6FF 100%);
+    }
+}
+
 header {
     background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
     color: white;
     padding: 40px 20px;
     text-align: center;
     box-shadow: 0 4px 20px rgba(46, 125, 50, 0.3);
+    position: relative;
+}
+
+.logo {
+    margin-bottom: 20px;
+}
+
+.logo-text {
+    font-size: 4em;
+    font-weight: bold;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    animation: logoPulse 2s ease-in-out infinite;
+    display: inline-block;
+    background: linear-gradient(45deg, #ffffff, #e8f5e9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    border-radius: 10px;
+    padding: 10px 20px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes logoPulse {
+    0%, 100% {
+        transform: translateX(0) scale(1);
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    25% {
+        transform: translateX(-10px) scale(1.05);
+        text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+    }
+    75% {
+        transform: translateX(10px) scale(1.05);
+        text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7);
+    }
 }
 
 nav {
@@ -1214,4 +1260,9 @@ button:hover {
     button {
         padding: 10px 20px;
     }
+}
+
+/* Background Click Effect */
+body:active {
+    background: linear-gradient(135deg, #A0D6FF 0%, #C0E6FF 100%);
 }
