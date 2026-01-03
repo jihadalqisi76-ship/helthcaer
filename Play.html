@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الرعاية الصحية التفاعلية</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #1b5e20;
+        }
+        .start-screen, .question-screen, .feedback-screen, .end-screen {
+            display: none;
+        }
+        .start-screen {
+            display: block;
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .feedback {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: #2e7d32;
+        }
+        .incorrect {
+            color: #d32f2f;
+        }
+        .score {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        .explanation {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            .question {
+                font-size: 1em;
+            }
+            button {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="start-screen">
+            <h1>لعبة الرعاية الصحية التفاعلية</h1>
+            <p>اختبر معرفتك بالرعاية الصحية من خلال أسئلة ومواقف تفاعلية!</p>
+            <button onclick="startGame()">ابدأ اللعبة</button>
+        </div>
+        <div class="question-screen">
+            <div class="score">النقاط: <span id="score">0</span></div>
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+        </div>
+        <div class="feedback-screen">
+            <div class="feedback" id="feedback"></div>
+            <div class="explanation" id="explanation"></div>
+            <a href="game.html"><button class="health-test-btn">بدء اختبار الصحة</button></a>
+            <button onclick="nextQuestion()">السؤال التالي</button>
+        </div>
+        <div class="end-screen">
+            <h2>انتهت اللعبة!</h2>
+            <p>نقاطك النهائية: <span id="final-score"></span></p>
+            <p id="message"></p>
+            <button onclick="restartGame()">العب مرة أخرى</button>
+        </div>
+    </div>
+
+    <script>
+        // مصفوفة الأسئلة
+        const questions = [
+            {
+                question: "كم كوب ماء يجب أن يشرب الشخص البالغ يومياً تقريباً؟",
+                options: ["4-6 أكواب", "8-10 أكواب", "12-14 كوباً"],
+                correct: 1,
+                explanation: "يُنصح بشرب 8-10 أكواب ماء يومياً للحفاظ على الترطيب الجيد."
+            },
+            {
+                question: "كم ساعة نوم يحتاجها البالغون يومياً؟",
+                options: ["4-6 ساعات", "7-9 ساعات", "10-12 ساعة"],
+                correct: 1,
+                explanation: "البالغون يحتاجون إلى 7-9 ساعات نوم يومياً للصحة الجيدة."
+            },
+            {
+                question: "أي من هذه الأطعمة يُعتبر مصدراً جيداً للبروتين؟",
+                options: ["الخضروات الورقية", "اللحوم والدواجن", "الفواكه الحلوة"],
+                correct: 1,
+                explanation: "اللحوم والدواجن مصادر ممتازة للبروتين الذي يساعد في بناء العضلات."
+            },
+            {
+                question: "كم دقيقة تمارين رياضية يُنصح بها أسبوعياً للبالغين؟",
+                options: ["75 دقيقة", "150 دقيقة", "300 دقيقة"],
+                correct: 1,
+                explanation: "يُنصح بـ150 دقيقة من التمارين المعتدلة أسبوعياً."
+            },
+            {
+                question: "ماذا تفعل إذا رأيت شخصاً يُغمى عليه؟",
+                options: ["تصرخ بصوت عالٍ", "تحقق من التنفس وتتصل بالإسعاف", "تركه وحده"],
+                correct: 1,
+                explanation: "تحقق من التنفس واتصل بالإسعاف فوراً في حالات الإغماء."
+            },
+            {
+                question: "أي من هذه الخضروات غنية بالفيتامين C؟",
+                options: ["البطاطس", "الفلفل الأحمر", "الجزر"],
+                correct: 1,
+                explanation: "الفلفل الأحمر مصدر ممتاز للفيتامين C الذي يعزز المناعة."
+            },
+            {
+                question: "ما هو الوقت الأفضل لممارسة الرياضة؟",
+                options: ["فوراً بعد الأكل", "بعد ساعتين من الأكل", "أثناء الأكل"],
+                correct: 1,
+                explanation: "انتظر ساعتين بعد الأكل قبل ممارسة الرياضة لتجنب المشاكل الهضمية."
+            },
+            {
+                question: "كيف تحمي نفسك من نزلات البرد؟",
+                options: ["تجنب غسل اليدين", "غسل اليدين بانتظام وتناول الفواكه", "البقاء في المنزل دائماً"],
+                correct: 1,
+                explanation: "غسل اليدين والتغذية الجيدة تساعد في تعزيز المناعة ضد نزلات البرد."
+            },
+            {
+                question: "ما هو تأثير النوم القليل على الجسم؟",
+                options: ["يزيد الطاقة", "يقلل التركيز ويزيد الإرهاق", "يحسن المزاج"],
+                correct: 1,
+                explanation: "النوم القليل يقلل التركيز ويزيد من الإرهاق والتوتر."
+            },
+            {
+                question: "أي من هذه المشروبات صحي أكثر؟",
+                options: ["المشروبات الغازية", "العصائر الطبيعية", "القهوة المركزة"],
+                correct: 1,
+                explanation: "العصائر الطبيعية تحتوي على فيتامينات وأقل سكريات مضافة."
+            },
+            {
+                question: "ما هو الفرق بين الدهون الصحية والضارة؟",
+                options: ["الدهون الصحية من المصادر النباتية", "الدهون الضارة من الحيوانات", "لا فرق"],
+                correct: 0,
+                explanation: "الدهون الصحية مثل الزيوت النباتية، بينما الدهون الضارة المشبعة من الحيوانات."
+            },
+            {
+                question: "كيف يمكن منع الجفاف؟",
+                options: ["شرب الماء بانتظام", "تناول الملح الزائد", "الجلوس في الحرارة"],
+                correct: 0,
+                explanation: "شرب الماء بانتظام يمنع الجفاف."
+            },
+            {
+                question: "ما هي أعراض نقص الحديد؟",
+                options: ["الإرهاق والدوخة", "زيادة الطاقة", "تحسن التركيز"],
+                correct: 0,
+                explanation: "نقص الحديد يسبب إرهاقاً ودوخة."
+            },
+            {
+                question: "كم دقيقة يجب أن يمشي الشخص يومياً؟",
+                options: ["10 دقائق", "30 دقيقة", "60 دقيقة"],
+                correct: 1,
+                explanation: "30 دقيقة من المشي يومياً مفيدة للصحة."
+            },
+            {
+                question: "ما هو دور الألياف في الجسم؟",
+                options: ["تحسن الهضم", "تزيد الوزن", "تسبب الإمساك"],
+                correct: 0,
+                explanation: "الألياف تساعد في الهضم ومنع الإمساك."
+            },
+            {
+                question: "كيف تحمي قلبك؟",
+                options: ["تناول الدهون الصحية وممارسة الرياضة", "تناول الوجبات السريعة", "الجلوس طوال اليوم"],
+                correct: 0,
+                explanation: "النظام الغذائي الصحي والرياضة تحمي القلب."
+            },
+            {
+                question: "ما هي أعراض الاكتئاب؟",
+                options: ["الحزن المستمر والإرهاق", "السعادة الزائدة", "زيادة الطاقة"],
+                correct: 0,
+                explanation: "الاكتئاب يسبب حزن مستمر وإرهاق."
+            },
+            {
+                question: "كم مرة يجب فحص النظر سنوياً؟",
+                options: ["مرة واحدة", "مرتين", "ثلاث مرات"],
+                correct: 0,
+                explanation: "فحص النظر مرة سنوياً للكشف عن المشاكل."
+            },
+            {
+                question: "ما هو تأثير الكافيين على الجسم؟",
+                options: ["يزيد اليقظة", "يسبب النعاس", "يقلل التركيز"],
+                correct: 0,
+                explanation: "الكافيين يزيد اليقظة والتركيز."
+            },
+            {
+                question: "كيف تتعامل مع الصداع؟",
+                options: ["الراحة والماء", "تناول المزيد من القهوة", "الإجهاد الإضافي"],
+                correct: 0,
+                explanation: "الراحة وشرب الماء يساعدان في علاج الصداع."
+            },
+            {
+                question: "ما هو الفرق بين البرد والإنفلونزا؟",
+                options: ["الإنفلونزا أشد وأسرع انتشاراً", "البرد أشد", "لا فرق"],
+                correct: 0,
+                explanation: "الإنفلونزا تسبب أعراضاً أشد وتنتشر أسرع من البرد العادي."
+            },
+            {
+                question: "كيف يمكن الوقاية من السرطان؟",
+                options: ["تجنب التدخين والكحول", "الجلوس طوال اليوم", "تناول الوجبات السريعة"],
+                correct: 0,
+                explanation: "تجنب التدخين والكحول واتباع نظام غذائي صحي يقلل من خطر الإصابة بالسرطان."
+            },
+            {
+                question: "ما هو دور الفيتامين D في الجسم؟",
+                options: ["يعزز صحة العظام", "يحسن الرؤية", "يقلل الوزن"],
+                correct: 0,
+                explanation: "الفيتامين D ضروري لامتصاص الكالسيوم وصحة العظام."
+            },
+            {
+                question: "كيف تتعامل مع الإجهاد؟",
+                options: ["ممارسة الرياضة والتأمل", "تناول المزيد من القهوة", "النوم طوال اليوم"],
+                correct: 0,
+                explanation: "الرياضة والتأمل تساعدان في تقليل الإجهاد."
+            },
+            {
+                question: "ما هي أعراض ارتفاع ضغط الدم؟",
+                options: ["صداع ودوخة", "فقدان الشهية", "زيادة الوزن"],
+                correct: 0,
+                explanation: "ارتفاع ضغط الدم قد يسبب صداعاً ودوخة."
+            },
+            {
+                question: "كم مرة يجب تنظيف الأسنان يومياً؟",
+                options: ["مرة واحدة", "مرتين", "ثلاث مرات"],
+                correct: 1,
+                explanation: "يُنصح بتنظيف الأسنان مرتين يومياً للحفاظ على صحة الفم."
+            },
+            {
+                question: "ما هو الفرق بين السكري من النوع 1 والنوع 2؟",
+                options: ["النوع 1 يحدث في الطفولة والنوع 2 مرتبط بالسمنة", "لا فرق", "النوع 2 أشد"],
+                correct: 0,
+                explanation: "السكري من النوع 1 يبدأ في الطفولة، بينما النوع 2 مرتبط بالسمنة والعمر."
+            },
+            {
+                question: "كيف تحمي جلدك من الشمس؟",
+                options: ["استخدام واقي شمس", "الجلوس في الظل", "ارتداء ملابس خفيفة"],
+                correct: 0,
+                explanation: "واقي الشمس يحمي الجلد من الأشعة فوق البنفسجية."
+            },
+            {
+                question: "ما هي فوائد تناول الخضروات؟",
+                options: ["توفر فيتامينات وألياف", "تزيد الوزن", "تسبب الإمساك"],
+                correct: 0,
+                explanation: "الخضروات غنية بالفيتامينات والألياف التي تدعم الصحة."
+            },
+            {
+                question: "كم ساعة يجب أن يجلس الطفل أمام الشاشة يومياً؟",
+                options: ["ساعة واحدة", "ساعتين", "ثلاث ساعات"],
+                correct: 1,
+                explanation: "يُنصح بألا يزيد وقت الشاشة عن ساعتين للأطفال."
+            },
+            {
+                question: "ما هو تأثير التدخين على الرئتين؟",
+                options: ["يدمر الرئتين تدريجياً", "يحسن التنفس", "لا تأثير"],
+                correct: 0,
+                explanation: "التدخين يسبب تلف الرئتين ويزيد من خطر الإصابة بالسرطان."
+            },
+            {
+                question: "كيف تتعامل مع الحساسية الموسمية؟",
+                options: ["تجنب المسببات واستخدام الأدوية", "تناول المزيد من الحلويات", "الخروج في البرد"],
+                correct: 0,
+                explanation: "تجنب المسببات مثل الغبار واستخدام مضادات الهيستامين تساعد في السيطرة على الحساسية."
+            },
+            {
+                question: "ما هو الفرق بين الدهون الصحية والضارة؟",
+                options: ["الدهون الصحية من المصادر النباتية", "الدهون الضارة من الحيوانات", "لا فرق"],
+                correct: 0,
+                explanation: "الدهون الصحية مثل الزيوت النباتية، بينما الدهون الضارة المشبعة من الحيوانات."
+            },
+            {
+                question: "كيف يمكن منع الجفاف؟",
+                options: ["شرب الماء بانتظام", "تناول الملح الزائد", "الجلوس في الحرارة"],
+                correct: 0,
+                explanation: "شرب الماء بانتظام يمنع الجفاف."
+            },
+            {
+                question: "ما هي أعراض نقص الحديد؟",
+                options: ["الإرهاق والدوخة", "زيادة الطاقة", "تحسن التركيز"],
+                correct: 0,
+                explanation: "نقص الحديد يسبب إرهاقاً ودوخة."
+            },
+            {
+                question: "كم دقيقة يجب أن يمشي الشخص يومياً؟",
+                options: ["10 دقائق", "30 دقيقة", "60 دقيقة"],
+                correct: 1,
+                explanation: "30 دقيقة من المشي يومياً مفيدة للصحة."
+            },
+            {
+                question: "ما هو دور الألياف في الجسم؟",
+                options: ["تحسن الهضم", "تزيد الوزن", "تسبب الإمساك"],
+                correct: 0,
+                explanation: "الألياف تساعد في الهضم ومنع الإمساك."
+            },
+            {
+                question: "كيف تحمي قلبك؟",
+                options: ["تناول الدهون الصحية وممارسة الرياضة", "تناول الوجبات السريعة", "الجلوس طوال اليوم"],
+                correct: 0,
+                explanation: "النظام الغذائي الصحي والرياضة تحمي القلب."
+            },
+            {
+                question: "ما هي أعراض الاكتئاب؟",
+                options: ["الحزن المستمر والإرهاق", "السعادة الزائدة", "زيادة الطاقة"],
+                correct: 0,
+                explanation: "الاكتئاب يسبب حزن مستمر وإرهاق."
+            },
+            {
+                question: "كم مرة يجب فحص النظر سنوياً؟",
+                options: ["مرة واحدة", "مرتين", "ثلاث مرات"],
+                correct: 0,
+                explanation: "فحص النظر مرة سنوياً للكشف عن المشاكل."
+            },
+            {
+                question: "ما هو تأثير الكافيين على الجسم؟",
+                options: ["يزيد اليقظة", "يسبب النعاس", "يقلل التركيز"],
+                correct: 0,
+                explanation: "الكافيين يزيد اليقظة والتركيز."
+            },
+            {
+                question: "كيف تتعامل مع الصداع؟",
+                options: ["الراحة والماء", "تناول المزيد من القهوة", "الإجهاد الإضافي"],
+                correct: 0,
+                explanation: "الراحة وشرب الماء يساعدان في علاج الصداع."
+            },
+            {
+                question: "ما هو الفرق بين البرد والإنفلونزا؟",
+                options: ["الإنفلونزا أشد وأسرع انتشاراً", "البرد أشد", "لا فرق"],
+                correct: 0,
+                explanation: "الإنفلونزا تسبب أعراضاً أشد وتنتشر أسرع من البرد العادي."
+            },
+            {
+                question: "كيف يمكن الوقاية من السرطان؟",
+                options: ["تجنب التدخين والكحول", "الجلوس طوال اليوم", "تناول الوجبات السريعة"],
+                correct: 0,
+                explanation: "تجنب التدخين والكحول واتباع نظام غذائي صحي يقلل من خطر الإصابة بالسرطان."
+            },
+            {
+                question: "ما هو دور الفيتامين D في الجسم؟",
+                options: ["يعزز صحة العظام", "يحسن الرؤية", "يقلل الوزن"],
+                correct: 0,
+                explanation: "الفيتامين D ضروري لامتصاص الكالسيوم وصحة العظام."
+            },
+            {
+                question: "كيف تتعامل مع الإجهاد؟",
+                options: ["ممارسة الرياضة والتأمل", "تناول المزيد من القهوة", "النوم طوال اليوم"],
+                correct: 0,
+                explanation: "الرياضة والتأمل تساعدان في تقليل الإجهاد."
+            },
+            {
+                question: "ما هي أعراض ارتفاع ضغط الدم؟",
+                options: ["صداع ودوخة", "فقدان الشهية", "زيادة الوزن"],
+                correct: 0,
+                explanation: "ارتفاع ضغط الدم قد يسبب صداعاً ودوخة."
+            },
+            {
+                question: "كم مرة يجب تنظيف الأسنان يومياً؟",
+                options: ["مرة واحدة", "مرتين", "ثلاث مرات"],
+                correct: 1,
+                explanation: "يُنصح بتنظيف الأسنان مرتين يومياً للحفاظ على صحة الفم."
+            },
+            {
+                question: "ما هو الفرق بين السكري من النوع 1 والنوع 2؟",
+                options: ["النوع 1 يحدث في الطفولة والنوع 2 مرتبط بالسمنة", "لا فرق", "النوع 2 أشد"],
+                correct: 0,
+                explanation: "السكري من النوع 1 يبدأ في الطفولة، بينما النوع 2 مرتبط بالسمنة والعمر."
+            },
+            {
+                question: "كيف تحمي جلدك من الشمس؟",
+                options: ["استخدام واقي شمس", "الجلوس في الظل", "ارتداء ملابس خفيفة"],
+                correct: 0,
+                explanation: "واقي الشمس يحمي الجلد من الأشعة فوق البنفسجية."
+            },
+            {
+                question: "ما هي فوائد تناول الخضروات؟",
+                options: ["توفر فيتامينات وألياف", "تزيد الوزن", "تسبب الإمساك"],
+                correct: 0,
+                explanation: "الخضروات غنية بالفيتامينات والألياف التي تدعم الصحة."
+            },
+            {
+                question: "كم ساعة يجب أن يجلس الطفل أمام الشاشة يومياً؟",
+                options: ["ساعة واحدة", "ساعتين", "ثلاث ساعات"],
+                correct: 1,
+                explanation: "يُنصح بألا يزيد وقت الشاشة عن ساعتين للأطفال."
+            },
+            {
+                question: "ما هو تأثير التدخين على الرئتين؟",
+                options: ["يدمر الرئتين تدريجياً", "يحسن التنفس", "لا تأثير"],
+                correct: 0,
+                explanation: "التدخين يسبب تلف الرئتين ويزيد من خطر الإصابة بالسرطان."
+            },
+            {
+                question: "كيف تتعامل مع الحساسية الموسمية؟",
+                options: ["تجنب المسببات واستخدام الأدوية", "تناول المزيد من الحلويات", "الخروج في البرد"],
+                correct: 0,
+                explanation: "تجنب المسببات مثل الغبار واستخدام مضادات الهيستامين تساعد في السيطرة على الحساسية."
+            },
+            {
+                question: "كيف يمكن الوقاية من أمراض القلب؟",
+                options: ["تناول الدهون الصحية وممارسة الرياضة", "تناول الوجبات السريعة", "الجلوس طوال اليوم"],
+                correct: 0,
+                explanation: "النظام الغذائي الصحي والرياضة تحميان من أمراض القلب."
+            },
+            {
+                question: "ما هي أعراض الإنفلونزا؟",
+                options: ["الحمى والسعال", "فقدان الشهية", "زيادة الوزن"],
+                correct: 0,
+                explanation: "الإنفلونزا تسبب حمى وسعالاً شديداً."
+            },
+            {
+                question: "كم مرة يجب فحص الضغط الدموي؟",
+                options: ["مرة سنوياً", "مرتين سنوياً", "ثلاث مرات سنوياً"],
+                correct: 0,
+                explanation: "فحص الضغط الدموي مرة سنوياً للكشف عن المشاكل."
+            },
+            {
+                question: "ما هو دور البوتاسيوم في الجسم؟",
+                options: ["يحافظ على توازن السوائل", "يحسن الرؤية", "يقلل الوزن"],
+                correct: 0,
+                explanation: "البوتاسيوم يساعد في الحفاظ على توازن السوائل والعضلات."
+            },
+            {
+                question: "كيف تتعامل مع الإسهال؟",
+                options: ["شرب السوائل وتناول الأطعمة الخفيفة", "تناول الوجبات الثقيلة", "الجلوس في الحرارة"],
+                correct: 0,
+                explanation: "شرب السوائل وتناول الأطعمة الخفيفة يساعد في علاج الإسهال."
+            },
+            {
+                question: "ما هو دور الحديد في الجسم؟",
+                options: ["يحمل الأكسجين في الدم", "يحسن الرؤية", "يقلل الوزن"],
+                correct: 0,
+                explanation: "الحديد ضروري لنقل الأكسجين في الدم."
+            },
+            {
+                question: "كيف تحمي نفسك من الإصابة بالإيدز؟",
+                options: ["استخدام الواقي الذكري", "مشاركة الإبر", "الجلوس في المنزل"],
+                correct: 0,
+                explanation: "استخدام الواقي الذكري يحمي من الإصابة بالإيدز."
+            },
+            {
+                question: "ما هي فوائد تناول الفواكه؟",
+                options: ["توفر فيتامينات وألياف", "تزيد الوزن", "تسبب الإمساك"],
+                correct: 0,
+                explanation: "الفواكه غنية بالفيتامينات والألياف التي تدعم الصحة."
+            },
+            {
+                question: "كم ساعة يجب أن ينام الطفل يومياً؟",
+                options: ["8-10 ساعات", "12-14 ساعة", "4-6 ساعات"],
+                correct: 1,
+                explanation: "الأطفال يحتاجون إلى 12-14 ساعة نوم يومياً."
+            },
+            {
+                question: "ما هو تأثير الرياضة على الصحة النفسية؟",
+                options: ["يقلل التوتر", "يزيد التوتر", "لا تأثير"],
+                correct: 0,
+                explanation: "الرياضة تساعد في تقليل التوتر والقلق."
+            },
+            {
+                question: "كيف تحمي أسنانك؟",
+                options: ["تنظيفها مرتين يومياً واستخدام الخيط", "تناول السكريات", "الجلوس في البرد"],
+                correct: 0,
+                explanation: "تنظيف الأسنان بانتظام واستخدام الخيط يحمي الأسنان."
+            },
+            {
+                question: "ما هي أعراض نقص الفيتامين D؟",
+                options: ["ضعف العظام", "زيادة الطاقة", "تحسن التركيز"],
+                correct: 0,
+                explanation: "نقص الفيتامين D يسبب ضعف العظام."
+            },
+            {
+                question: "كيف تتعامل مع الحرقان في المعدة؟",
+                options: ["تجنب الأطعمة الحارة وتناول الأدوية", "تناول المزيد من القهوة", "الجلوس في الحرارة"],
+                correct: 0,
+                explanation: "تجنب الأطعمة الحارة واستخدام مضادات الحموضة تساعد في علاج الحرقان."
+            },
+            {
+                question: "ما هو دور الكالسيوم في الجسم؟",
+                options: ["يعزز صحة العظام", "يحسن الرؤية", "يقلل الوزن"],
+                correct: 0,
+                explanation: "الكالسيوم ضروري لصحة العظام والأسنان."
+            },
+            {
+                question: "كيف تحمي نفسك من الإصابة بالكوليرا؟",
+                options: ["شرب الماء النظيف", "تناول الطعام الملوث", "الجلوس في المنزل"],
+                correct: 0,
+                explanation: "شرب الماء النظيف يحمي من الإصابة بالكوليرا."
+            },
+            {
+                question: "ما هي فوائد تناول المكسرات؟",
+                options: ["توفر دهون صحية وبروتين", "تزيد الوزن", "تسبب الإمساك"],
+                correct: 0,
+                explanation: "المكسرات غنية بالدهون الصحية والبروتين."
+            },
+            {
+                question: "كم مرة يجب فحص السمع سنوياً؟",
+                options: ["مرة واحدة", "مرتين", "ثلاث مرات"],
+                correct: 0,
+                explanation: "فحص السمع مرة سنوياً للكشف عن المشاكل."
+            },
+            {
+                question: "ما هو تأثير الجلوس طوال اليوم على الجسم؟",
+                options: ["يزيد من خطر أمراض القلب", "يحسن الصحة", "لا تأثير"],
+                correct: 0,
+                explanation: "الجلوس طوال اليوم يزيد من خطر أمراض القلب والسكري."
+            },
+            {
+                question: "كيف تتعامل مع الغثيان؟",
+                options: ["شرب الماء والراحة", "تناول الوجبات الثقيلة", "الإجهاد الإضافي"],
+                correct: 0,
+                explanation: "شرب الماء والراحة يساعدان في علاج الغثيان."
+            },
+            {
+                question: "ما هو دور المغنيسيوم في الجسم؟",
+                options: ["يحافظ على وظائف العضلات", "يحسن الرؤية", "يقلل الوزن"],
+                correct: 0,
+                explanation: "المغنيسيوم يساعد في وظائف العضلات والأعصاب."
+            },
+            {
+                question: "كيف تحمي نفسك من الإصابة بالملاريا؟",
+                options: ["استخدام المبيدات وارتداء الملابس الطويلة", "الجلوس في المنزل", "تناول الطعام الملوث"],
+                correct: 0,
+                explanation: "استخدام المبيدات وارتداء الملابس الطويلة يحميان من الملاريا."
+            },
+            {
+                question: "ما هي فوائد تناول الأسماك؟",
+                options: ["توفر أحماض دهنية صحية", "تزيد الوزن", "تسبب الإمساك"],
+                correct: 0,
+                explanation: "الأسماك غنية بالأحماض الدهنية الصحية مثل أوميجا 3."
+            },
+            {
+                question: "كم مرة يجب فحص الجلد سنوياً؟",
+                options: ["مرة واحدة", "مرتين", "ثلاث مرات"],
+                correct: 0,
+                explanation: "فحص الجلد مرة سنوياً للكشف عن السرطان."
+            },
+            {
+                question: "ما هو تأثير الإفراط في تناول السكر؟",
+                options: ["يزيد الطاقة", "يسبب السمنة والمشاكل الصحية", "يحسن التركيز"],
+                correct: 1,
+                explanation: "الإفراط في السكر يسبب السمنة ومشاكل صحية مثل السكري."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+        let currentCorrectIndex = 0;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function getRandomQuestions(questions, num) {
+            const shuffled = shuffleArray([...questions]);
+            return shuffled.slice(0, num);
+        }
+
+        function startGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            shuffledQuestions = getRandomQuestions(questions, 10);
+            document.querySelector('.start-screen').style.display = 'none';
+            document.querySelector('.question-screen').style.display = 'block';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = shuffledQuestions[currentQuestionIndex];
+            document.getElementById('question').textContent = question.question;
+            document.getElementById('score').textContent = score;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            const shuffledOptions = shuffleArray([...question.options]);
+            currentCorrectIndex = shuffledOptions.indexOf(question.options[question.correct]);
+            shuffledOptions.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const question = shuffledQuestions[currentQuestionIndex];
+            const feedbackDiv = document.getElementById('feedback');
+            const explanationDiv = document.getElementById('explanation');
+            if (selectedIndex === currentCorrectIndex) {
+                feedbackDiv.textContent = '✅ صحيح!';
+                feedbackDiv.className = 'feedback correct';
+                score++;
+            } else {
+                feedbackDiv.textContent = '❌ خطأ!';
+                feedbackDiv.className = 'feedback incorrect';
+            }
+            explanationDiv.textContent = question.explanation;
+            document.querySelector('.question-screen').style.display = 'none';
+            document.querySelector('.feedback-screen').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                document.querySelector('.feedback-screen').style.display = 'none';
+                document.querySelector('.question-screen').style.display = 'block';
+                showQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            document.querySelector('.feedback-screen').style.display = 'none';
+            document.querySelector('.end-screen').style.display = 'block';
+            document.getElementById('final-score').textContent = score;
+            const messageDiv = document.getElementById('message');
+            if (score >= 8) {
+                messageDiv.textContent = 'ممتاز! معرفتك بالرعاية الصحية رائعة.';
+            } else if (score >= 5) {
+                messageDiv.textContent = 'جيد! استمر في تعلم المزيد عن الصحة.';
+            } else {
+                messageDiv.textContent = 'لا تيأس! حاول مرة أخرى لتحسين معرفتك.';
+            }
+        }
+
+        function restartGame() {
+            document.querySelector('.end-screen').style.display = 'none';
+            startGame();
+        }
+    </script>
+</body>
+</html>
+<link rel="stylesheet" href="index.html">
